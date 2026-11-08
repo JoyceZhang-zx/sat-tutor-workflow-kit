@@ -1,0 +1,43 @@
+{
+  "id": "original-starter",
+  "title": "Original starter practice",
+  "note": "Three original demonstration items. Alex is fictional; no student history is supplied.",
+  "questions": [
+    {
+      "num": 1,
+      "passage": "The archive once cataloged only printed maps. Its recent acquisition of oral accounts, which describe routes absent from official surveys, has expanded the kinds of geographical knowledge represented in the collection.",
+      "prompt": "Which choice best states the main idea of the text?",
+      "choices": {
+        "A": "Oral accounts have replaced all printed maps in the archive.",
+        "B": "The archive now represents a wider range of geographical knowledge.",
+        "C": "Official surveys accurately document every historical route.",
+        "D": "Printed maps are less reliable than all oral accounts."
+      },
+      "correctAnswer": "B"
+    },
+    {
+      "num": 2,
+      "passage": "Although the proposal initially seemed <u>modest</u>, its limited scope was deliberate: the researchers wanted to test a single assumption before committing resources to a larger investigation.",
+      "prompt": "As used in the text, what does the word “modest” most nearly mean?",
+      "choices": {
+        "A": "Restricted in scale",
+        "B": "Uncertain in meaning",
+        "C": "Reluctant to speak",
+        "D": "Lacking evidence"
+      },
+      "correctAnswer": "A"
+    },
+    {
+      "num": 3,
+      "passage": "The first sensor failed whenever temperatures fell below freezing. The replacement maintained stable readings throughout the winter.",
+      "prompt": "Which choice best describes the relationship between the two sentences?",
+      "choices": {
+        "A": "The second explains why the first sensor was designed.",
+        "B": "The second questions whether winter temperatures fall below freezing.",
+        "C": "The second contrasts the replacement’s performance with the first sensor’s limitation.",
+        "D": "The second provides another example of the first sensor’s failure."
+      },
+      "correctAnswer": "C"
+    }
+  ]
+}

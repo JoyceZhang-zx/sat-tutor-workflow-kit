@@ -1,0 +1,1388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>__STUDENT__'s SAT Practice</title>
+<style>
+  :root{
+    --navy:#0B2265; --navy-dark:#081A4D;
+    --blue:#0060DE; --blue-dark:#0050BC;
+    --hdr-bg:#EAF0F8;
+    --ink:#1A1A2E; --muted:#5B6478; --faint:#8B93A6;
+    --line:#D6DCE6; --line-dark:#1A1A2E;
+    --white:#fff; --paper:#FAFBFC;
+    --green:#0F7A3D; --green-bg:#E5F5EA;
+    --red:#C3282D; --red-bg:#FCEAEA;
+    --amber:#8A5A00; --amber-bg:#FEF3D6;
+    --bar-ok:#2E9E5B; --bar-bad:#D9484D; --bar-blank:#B8BFCC;
+    --serif: Georgia, 'Times New Roman', serif;
+    --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+  }
+  *,*::before,*::after{box-sizing:border-box; margin:0; padding:0;}
+  html,body{height:100%;}
+  body{ font-family:var(--sans); color:var(--ink); background:var(--white); -webkit-font-smoothing:antialiased; }
+  button{font-family:inherit;}
+  ::selection{background:#BFD9FF;}
+
+  /* ── Header ── */
+  .hdr{ position:sticky; top:0; z-index:30; background:var(--hdr-bg); border-bottom:1px solid var(--line); padding:0.7rem 1.5rem 0.55rem; }
+  .hdr-row{ display:flex; align-items:flex-start; justify-content:space-between; gap:1rem; }
+  .hdr-title{ font-size:1.05rem; font-weight:700; }
+  .hdr-sub{ margin-top:0.15rem; font-size:0.8rem; color:var(--muted); font-weight:600; }
+  .hdr-mid{ text-align:center; }
+  .hdr-timer{ font-size:1.5rem; font-weight:700; letter-spacing:0.02em; font-variant-numeric:tabular-nums; }
+  .hdr-timer.hidden-t{ visibility:hidden; }
+  .pill-btn{ margin-top:0.2rem; border:1.5px solid var(--muted); background:var(--white); border-radius:999px; padding:0.15rem 0.9rem; font-size:0.75rem; font-weight:600; color:var(--ink); cursor:pointer; }
+  .pill-btn:hover{ background:#F0F3F8; }
+  .hdr-right{ display:flex; align-items:center; gap:1.25rem; }
+  .hdr-icon-btn{ display:flex; flex-direction:column; align-items:center; gap:0.15rem; background:none; border:none; cursor:pointer; color:var(--ink); font-size:0.7rem; font-weight:600; }
+  .hdr-icon-btn svg{ width:18px; height:18px; }
+  .hdr-icon-btn:hover{ color:var(--blue); }
+  .banner{ background:var(--navy); color:var(--white); text-align:center; font-size:0.72rem; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; padding:0.4rem; border-bottom:1px solid var(--navy-dark); }
+
+  /* ── Split layout ── */
+  .split{ display:flex; min-height:calc(100vh - 150px); position:relative; }
+  .pane{ padding:2.2rem 2.4rem; overflow:auto; }
+  .pane-l{ width:50%; }
+  .pane-r{ width:50%; border-left:1px solid var(--line); }
+  .divider{ width:14px; margin-left:-7px; margin-right:-7px; cursor:col-resize; display:flex; align-items:center; justify-content:center; z-index:5; position:relative; }
+  .divider::after{ content:"◆"; font-size:0.6rem; color:var(--faint); background:var(--white); border:1px solid var(--line); border-radius:50%; width:20px; height:20px; display:flex; align-items:center; justify-content:center; }
+
+  .passage{ font-family:var(--serif); font-size:1.15rem; line-height:1.85; color:var(--ink); white-space:pre-wrap; }
+  .passage mark.hl{ background:#FFF1A8; padding:0.02em 0; cursor:pointer; }
+  .passage mark.hl.noted{ box-shadow: 0 2px 0 0 var(--amber); }
+  .ptable-wrap{ margin:0.8em 0; white-space:normal; overflow-x:auto; }
+  .ptable{ display:table; border-collapse:collapse; font-size:0.95rem; }
+  .ptable-row{ display:table-row; }
+  .ptable-head .ptable-cell{ font-weight:700; border-bottom:2px solid var(--line); }
+  .ptable-cell{ display:table-cell; padding:0.35em 1.1em 0.35em 0; border-bottom:1px solid var(--line); vertical-align:top; }
+  .ptable-sep, .ptable-nl{ display:none; }
+  .pchart-wrap{ margin:1em 0; }
+  .pchart-title{ font-family:var(--sans); font-weight:700; font-size:0.85rem; color:var(--ink); margin-bottom:2px; }
+  .pchart-ylabel{ font-family:var(--sans); font-size:0.72rem; color:var(--faint); margin-bottom:4px; }
+  .pchart-xlabel{ font-family:var(--sans); font-size:0.72rem; color:var(--faint); text-align:center; margin-top:2px; }
+  .pchart-svg{ width:100%; max-width:560px; display:block; }
+  .pchart-grid{ stroke:var(--line); stroke-width:1; }
+  .pchart-axis{ stroke:var(--faint); stroke-width:1; }
+  .pchart-tick{ font-family:var(--sans); font-size:9px; fill:var(--faint); }
+  .pchart-vallabel{ font-family:var(--sans); font-size:9px; fill:var(--ink); font-weight:600; }
+  .pchart-catlabel{ font-family:var(--sans); font-size:9px; color:var(--muted); text-align:center; line-height:1.15; padding:0 2px; }
+  .pchart-legend{ display:flex; flex-wrap:wrap; gap:10px; margin-top:6px; font-family:var(--sans); font-size:0.72rem; color:var(--muted); }
+  .pchart-legend-item{ display:flex; align-items:center; gap:5px; }
+  .pchart-swatch{ width:10px; height:10px; border-radius:2px; display:inline-block; flex-shrink:0; }
+  .pchart-src{ display:none; }
+  .sel-toolbar{ position:absolute; z-index:50; background:var(--navy); color:#fff; border-radius:8px; padding:0.35rem 0.5rem; font-size:0.78rem; font-weight:600; display:flex; gap:0.4rem; box-shadow:0 4px 14px rgba(0,0,0,.25); }
+  .sel-toolbar button{ background:none; border:none; color:#fff; cursor:pointer; padding:0.15rem 0.4rem; border-radius:5px; }
+  .sel-toolbar button:hover{ background:rgba(255,255,255,0.15); }
+
+  .qhead{ display:flex; align-items:center; gap:0.7rem; padding-bottom:0.6rem; border-bottom:2px dashed var(--line); }
+  .qnum-badge{ min-width:26px; height:26px; padding:0 4px; background:var(--navy); color:#fff; font-weight:700; font-size:0.9rem; display:flex; align-items:center; justify-content:center; border-radius:2px; }
+  .mark-btn{ display:flex; align-items:center; gap:0.35rem; background:none; border:none; cursor:pointer; font-size:0.85rem; font-weight:600; color:var(--ink); }
+  .mark-btn svg{ width:15px; height:15px; }
+  .mark-btn.active{ color:var(--blue); }
+  .qhead-spacer{ flex:1; }
+  .elim-btn{ border:1.5px solid var(--line); background:var(--white); border-radius:6px; padding:0.25rem 0.55rem; font-size:0.72rem; font-weight:700; letter-spacing:0.02em; cursor:pointer; color:var(--muted); }
+  .elim-btn.active{ background:var(--navy); color:#fff; border-color:var(--navy); }
+  .prompt{ font-size:1.02rem; font-weight:500; margin:1.1rem 0 1.1rem; line-height:1.55; }
+  .choices{ display:flex; flex-direction:column; gap:0.7rem; }
+  .choice-row{ display:flex; align-items:center; gap:0.6rem; }
+  .choice{ flex:1; display:flex; align-items:center; gap:0.75rem; text-align:left; padding:0.7rem 1rem; border:1.5px solid var(--line-dark); border-radius:10px; background:var(--white); cursor:pointer; font-size:0.97rem; line-height:1.4; color:var(--ink); }
+  .choice:hover{ background:#F3F7FF; }
+  .choice.selected{ border-color:var(--blue); border-width:2px; background:#EAF2FF; }
+  .choice.struck .choice-text{ text-decoration:line-through; color:var(--faint); }
+  .choice-key{ width:24px; height:24px; min-width:24px; border-radius:50%; border:1.5px solid var(--muted); display:flex; align-items:center; justify-content:center; font-size:0.78rem; font-weight:700; color:var(--muted); }
+  .choice.selected .choice-key{ background:var(--blue); border-color:var(--blue); color:#fff; }
+  .elim-circle{ width:26px; height:26px; min-width:26px; border-radius:50%; border:1.5px solid var(--line-dark); display:none; align-items:center; justify-content:center; font-size:0.72rem; font-weight:700; color:var(--ink); background:var(--white); cursor:pointer; position:relative; }
+  .elim-visible .elim-circle{ display:flex; }
+  .elim-circle.struck::after{ content:""; position:absolute; left:1px; right:1px; top:50%; height:1.5px; background:var(--ink); transform:rotate(-8deg); }
+
+  /* ── Footer ── */
+  .ftr{ position:sticky; bottom:0; z-index:20; background:var(--white); border-top:1px solid var(--line); display:flex; align-items:center; justify-content:space-between; padding:0.75rem 1.5rem; gap:0.75rem; }
+  .ftr-name{ font-weight:700; font-size:0.9rem; }
+  .ftr-mid{ position:relative; }
+  .nav-toggle{ display:flex; align-items:center; gap:0.4rem; background:var(--white); border:1.5px solid var(--line-dark); border-radius:999px; padding:0.35rem 1rem; font-size:0.85rem; font-weight:700; cursor:pointer; color:var(--ink); white-space:nowrap; }
+  .nav-toggle svg{ width:11px; height:11px; }
+  .ftr-btns{ display:flex; gap:0.6rem; }
+  .btn{ padding:0.55rem 1.4rem; border-radius:6px; font-size:0.9rem; font-weight:700; cursor:pointer; border:none; }
+  .btn-primary{ background:var(--blue); color:#fff; }
+  .btn-primary:hover{ background:var(--blue-dark); }
+  .btn-outline{ background:#fff; border:1.5px solid var(--line-dark); color:var(--ink); }
+  .btn-outline:hover{ background:#F3F5F8; }
+  .btn-sm{ padding:0.35rem 0.9rem; font-size:0.8rem; }
+  .btn:disabled{ opacity:0.4; cursor:default; }
+
+  /* ── Navigator popover ── */
+  .navi-pop{ position:absolute; bottom:calc(100% + 10px); left:50%; transform:translateX(-50%); width:min(440px, 92vw); background:#fff; border:1px solid var(--line); border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,.18); padding:1rem; z-index:40; }
+  .navi-pop.static{ position:static; transform:none; width:100%; box-shadow:none; }
+  .navi-title{ font-size:0.85rem; font-weight:700; margin-bottom:0.7rem; }
+  .navi-grid{ display:grid; grid-template-columns:repeat(10,1fr); gap:0.4rem; }
+  .navi-cell{ position:relative; aspect-ratio:1; border:1.5px solid var(--line-dark); border-radius:5px; display:flex; align-items:center; justify-content:center; font-size:0.75rem; font-weight:700; cursor:pointer; background:#fff; }
+  .navi-cell.answered{ background:var(--navy); color:#fff; }
+  .navi-cell.current{ box-shadow:0 0 0 2px var(--blue); }
+  .navi-cell .flag{ position:absolute; top:-5px; right:-5px; width:11px; height:11px; color:var(--amber); }
+  .navi-legend{ display:flex; gap:1rem; margin-top:0.8rem; font-size:0.7rem; color:var(--muted); flex-wrap:wrap; }
+  .navi-legend span{ display:inline-flex; align-items:center; gap:0.3rem; }
+  .navi-legend svg{ width:11px; height:11px; }
+  .legend-dot{ width:10px; height:10px; border-radius:3px; border:1.5px solid var(--line-dark); display:inline-block; }
+  .legend-dot.answered{ background:var(--navy); border-color:var(--navy); }
+
+  /* ── Notes panel ── */
+  .notes-panel{ position:fixed; top:0; right:0; height:100%; width:min(340px, 100vw); background:#fff; border-left:1px solid var(--line); box-shadow:-6px 0 24px rgba(0,0,0,.12); z-index:60; transform:translateX(100%); transition:transform .2s; display:flex; flex-direction:column; }
+  .notes-panel.open{ transform:translateX(0); }
+  .notes-hd{ padding:1rem 1.1rem; border-bottom:1px solid var(--line); display:flex; align-items:center; justify-content:space-between; }
+  .notes-hd h3{ font-size:0.95rem; }
+  .notes-hd button{ background:none; border:none; font-size:1.2rem; cursor:pointer; color:var(--muted); }
+  .notes-body{ padding:1rem 1.1rem; overflow:auto; flex:1; }
+  .note-item{ border:1px solid var(--line); border-radius:8px; padding:0.6rem 0.7rem; margin-bottom:0.7rem; }
+  .note-item .qtag{ font-size:0.68rem; font-weight:700; color:var(--blue); margin-bottom:0.3rem; }
+  .note-item .htext{ font-size:0.85rem; background:#FFF1A8; padding:0.1rem 0.3rem; border-radius:3px; }
+  .note-item textarea{ width:100%; margin-top:0.5rem; font-family:inherit; font-size:0.8rem; border:1px solid var(--line); border-radius:6px; padding:0.4rem; resize:vertical; }
+  .note-item .remove{ font-size:0.72rem; color:var(--red); background:none; border:none; cursor:pointer; margin-top:0.4rem; }
+  .empty-note{ color:var(--faint); font-size:0.85rem; }
+
+  /* ── Modal ── */
+  .modal-bg{ position:fixed; inset:0; background:rgba(11,34,101,0.35); z-index:80; display:flex; align-items:center; justify-content:center; padding:1rem; }
+  .modal{ background:#fff; border-radius:14px; max-width:440px; width:100%; padding:1.5rem 1.6rem; box-shadow:0 20px 50px rgba(0,0,0,.25); }
+  .modal h2{ font-size:1.15rem; margin-bottom:0.6rem; }
+  .modal p{ color:var(--muted); line-height:1.55; font-size:0.95rem; }
+  .modal-btns{ display:flex; justify-content:flex-end; gap:0.6rem; margin-top:1.3rem; }
+
+  /* ── Page shell (home / results / tutor) ── */
+  .page{ max-width:900px; margin:0 auto; padding:2rem 1.25rem 5rem; }
+  .page-hd{ display:flex; align-items:flex-end; justify-content:space-between; gap:1rem; margin-bottom:1.5rem; flex-wrap:wrap; }
+  .page-hd h1{ font-size:1.6rem; }
+  .page-hd p{ color:var(--muted); margin-top:0.25rem; }
+  .eyebrow{ font-size:0.72rem; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:var(--blue); margin-bottom:0.3rem; }
+  .back-link{ background:none; border:none; color:var(--blue); font-weight:700; font-size:0.85rem; cursor:pointer; margin-bottom:1rem; padding:0; }
+  .section-title{ font-size:0.8rem; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--muted); margin:2rem 0 0.8rem; }
+
+  .practice-nav{display:flex;flex-wrap:wrap;gap:0.5rem;margin:0 0 2rem;}
+  .practice-nav a{color:var(--blue);border:1px solid var(--line);border-radius:20px;padding:0.45rem 0.85rem;text-decoration:none;font-size:0.82rem;font-weight:700;background:#fff;}
+  .practice-nav a:hover,.practice-nav a:focus-visible{background:var(--blue-light,#eef4ff);}
+  .practice-section{margin-top:2rem;scroll-margin-top:1.5rem;}
+  .practice-section-head{display:flex;align-items:baseline;justify-content:space-between;gap:0.75rem;margin-bottom:0.35rem;flex-wrap:wrap;}
+  .practice-section h2{font-size:1.2rem;color:var(--navy);margin:0;}
+  .practice-section .section-description{font-size:0.86rem;color:var(--muted);margin:0 0 1rem;}
+  .practice-section-count{font-size:0.78rem;color:var(--muted);}
+  .set-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(260px, 1fr)); gap:1rem; }
+  .set-card{ border:1.5px solid var(--line); border-radius:12px; padding:1.1rem 1.2rem; display:flex; flex-direction:column; gap:0.5rem; background:#fff; }
+  .set-card h3{ font-size:1.02rem; }
+  .set-meta{ font-size:0.82rem; color:var(--muted); }
+  .set-status{ font-size:0.78rem; font-weight:700; }
+  .set-status.todo{ color:var(--muted); }
+  .set-status.prog{ color:var(--amber); }
+  .set-status.done{ color:var(--green); }
+  .set-actions{ display:flex; gap:0.5rem; margin-top:auto; padding-top:0.5rem; flex-wrap:wrap; }
+
+  .tbl{ width:100%; border-collapse:collapse; font-size:0.88rem; }
+  .tbl th{ text-align:left; font-size:0.72rem; text-transform:uppercase; letter-spacing:0.05em; color:var(--muted); padding:0.5rem 0.6rem; border-bottom:2px solid var(--line); }
+  .tbl td{ padding:0.65rem 0.6rem; border-bottom:1px solid var(--line); font-variant-numeric:tabular-nums; }
+  .tbl tr.click{ cursor:pointer; }
+  .tbl tr.click:hover td{ background:#F3F7FF; }
+  .tbl-wrap{ overflow-x:auto; }
+
+  .score-hero{ background:var(--navy); color:#fff; border-radius:14px; padding:1.4rem 1.6rem; margin-bottom:1rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1.2rem; }
+  .score-hero .big{ font-size:2.2rem; font-weight:800; font-variant-numeric:tabular-nums; }
+  .score-hero .mid{ font-size:1.3rem; font-weight:800; font-variant-numeric:tabular-nums; }
+  .score-hero .lbl{ font-size:0.72rem; opacity:0.75; text-transform:uppercase; letter-spacing:0.06em; }
+  .hero-stats{ display:flex; gap:1.6rem; flex-wrap:wrap; }
+  .sync{ font-size:0.82rem; font-weight:600; padding:0.55rem 0.8rem; border-radius:8px; margin-bottom:1rem; }
+  .sync.ok{ background:var(--green-bg); color:var(--green); }
+  .sync.wait{ background:var(--amber-bg); color:var(--amber); }
+
+  .card{ border:1px solid var(--line); border-radius:12px; padding:1rem 1.1rem; margin-bottom:1rem; }
+  .card h3{ font-size:0.9rem; margin-bottom:0.2rem; }
+  .card .hint{ font-size:0.78rem; color:var(--muted); margin-bottom:0.6rem; }
+  .tchart{ width:100%; display:block; }
+  .tchart .bar{ cursor:pointer; }
+  .tchart .bar:hover{ opacity:0.8; }
+  .tchart text{ font-family:var(--sans); font-size:10px; fill:var(--muted); }
+  .tchart .pace{ stroke:var(--navy); stroke-width:1.2; stroke-dasharray:4 3; }
+  .tchart .pace-lbl{ fill:var(--navy); font-weight:700; }
+  .legend{ display:flex; gap:1rem; flex-wrap:wrap; font-size:0.75rem; color:var(--muted); margin-top:0.4rem; }
+  .legend i{ display:inline-block; width:10px; height:10px; border-radius:2px; margin-right:0.3rem; vertical-align:-1px; }
+  .insights{ display:grid; grid-template-columns:repeat(auto-fit, minmax(190px,1fr)); gap:0.8rem; margin-bottom:1rem; }
+  .ins{ border:1px solid var(--line); border-radius:10px; padding:0.8rem 0.9rem; }
+  .ins .v{ font-size:1.3rem; font-weight:800; font-variant-numeric:tabular-nums; }
+  .ins .k{ font-size:0.75rem; color:var(--muted); margin-top:0.15rem; line-height:1.4; }
+
+  .review-item{ border:1px solid var(--line); border-radius:10px; margin-bottom:0.7rem; overflow:hidden; }
+  .review-item.flash{ box-shadow:0 0 0 3px var(--blue); }
+  .review-item summary{ list-style:none; cursor:pointer; padding:0.7rem 1rem; display:flex; align-items:center; gap:0.6rem; font-size:0.9rem; font-weight:600; flex-wrap:wrap; }
+  .review-item summary::-webkit-details-marker{ display:none; }
+  .badge{ font-size:0.68rem; font-weight:700; padding:0.15rem 0.5rem; border-radius:999px; text-transform:uppercase; letter-spacing:0.03em; }
+  .badge.correct{ background:var(--green-bg); color:var(--green); }
+  .badge.incorrect{ background:var(--red-bg); color:var(--red); }
+  .badge.unscored{ background:var(--amber-bg); color:var(--amber); }
+  .badge.unanswered{ background:#EFEFEF; color:var(--muted); }
+  .badge.flagged{ background:#E9E4FF; color:#4B2FBE; }
+  .badge.slow{ background:#FFE8D6; color:#A04A00; }
+  .badge.changed{ background:#E3F1FF; color:#0B5CAD; }
+  .time-tag{ margin-left:auto; font-size:0.78rem; font-weight:700; color:var(--muted); font-variant-numeric:tabular-nums; white-space:nowrap; }
+  .time-tag.slow{ color:#A04A00; }
+  .review-detail{ padding:0 1.1rem 1.1rem; border-top:1px solid var(--line); }
+  .review-detail .rp{ font-family:var(--serif); font-size:0.95rem; line-height:1.6; color:var(--muted); margin:0.8rem 0; white-space:pre-wrap; }
+  .review-choice{ padding:0.45rem 0.7rem; border-radius:7px; font-size:0.85rem; margin-bottom:0.35rem; border:1px solid var(--line); }
+  .review-choice.rc-correct{ background:var(--green-bg); border-color:var(--green); }
+  .review-choice.rc-picked-wrong{ background:var(--red-bg); border-color:var(--red); }
+  .review-choice{ display:flex; align-items:center; gap:0.4rem; flex-wrap:wrap; }
+  .rc-tag{ margin-left:auto; font-size:0.68rem; font-weight:700; padding:0.1rem 0.5rem; border-radius:999px; white-space:nowrap; }
+  .rc-tag.ok{ background:var(--green); color:#fff; }
+  .rc-tag.bad{ background:var(--red); color:#fff; }
+  .rmeta{ font-size:0.78rem; color:var(--muted); margin-top:0.6rem; }
+  .filter-row{ display:flex; gap:0.5rem; margin-bottom:1rem; flex-wrap:wrap; }
+  .filter-chip{ border:1.5px solid var(--line-dark); background:#fff; border-radius:999px; padding:0.3rem 0.85rem; font-size:0.78rem; font-weight:600; cursor:pointer; color:var(--ink); }
+  .filter-chip.active{ background:var(--navy); color:#fff; border-color:var(--navy); }
+  .field{ display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center; }
+  .field input, .field select{ font:inherit; font-size:0.9rem; padding:0.5rem 0.7rem; border:1.5px solid var(--line-dark); border-radius:6px; min-width:0; }
+  .err{ color:var(--red); font-size:0.85rem; margin-top:0.6rem; }
+  .muted{ color:var(--muted); }
+
+  @media (max-width:860px){
+    .split{ flex-direction:column; }
+    .pane-l,.pane-r{ width:100% !important; }
+    .pane{ padding:1.4rem 1rem; }
+    .pane-r{ border-left:none; border-top:1px solid var(--line); }
+    .divider{ display:none; }
+    .hdr{ padding:0.6rem 1rem; }
+    .hdr-row > div:first-child{ min-width:0; flex:1; }
+    .hdr-title{ font-size:0.9rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .hdr-sub{ display:none; }
+    .hdr-timer{ font-size:1.15rem; }
+    .hdr-right{ gap:0.8rem; }
+    .hdr-icon-btn span{ display:none; }
+    .btn{ padding:0.55rem 1rem; }
+    .score-hero{ padding:1.1rem 1.2rem; }
+    .ftr{ padding:0.6rem 1rem; }
+    .ftr-name{ display:none; }
+    .navi-grid{ grid-template-columns:repeat(8,1fr); }
+  }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+/* ══════════════════ CONFIG (filled in by build.py) ══════════════════ */
+const CONFIG = {
+  student: "__STUDENT__",
+  submitUrl: "__SUBMIT_URL__",   // Google Apps Script web-app URL
+  paceSec: 71                    // digital SAT R&W pace: 64 min / 54 questions
+};
+const SETS = __SETS_JSON__;
+const ERRORLOG_EMPTY = __ERRORLOG_EMPTY__;
+const ERRORLOG_HTML = __ERRORLOG_HTML__;   // student's error-log page (+ bridge), or null
+
+/* ══════════════════ ICONS ══════════════════ */
+const ICO = {
+  bookmark: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4-7 4V4a1 1 0 0 1 1-1z"/></svg>',
+  bookmarkFill: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4-7 4V4a1 1 0 0 1 1-1z"/></svg>',
+  notes: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v16H4z"/><path d="M8 9h8M8 13h5"/></svg>',
+  home: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-8 9 8M5 9v12h14V9"/></svg>',
+  chev: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 15l6-6 6 6"/></svg>'
+};
+
+/* ══════════════════ STORAGE ══════════════════
+   Everything is namespaced by student so this file never collides with the
+   Bluebook test files (bluebook_sat_practice_v1::*) or another student's site
+   opened in the same browser. In-progress state is per set; submitted attempts
+   live in HISTORY (this device) and OUTBOX (waiting to reach the Google Sheet). */
+const NS = 'sat_practice_site_v1::' + CONFIG.student.toLowerCase().replace(/[^a-z0-9]+/g,'-');
+function lsGet(k, dflt){ try{ const v = localStorage.getItem(NS + '::' + k); return v ? JSON.parse(v) : dflt; }catch(e){ return dflt; } }
+function lsSet(k, v){ try{ localStorage.setItem(NS + '::' + k, JSON.stringify(v)); }catch(e){} }
+function lsDel(k){ try{ localStorage.removeItem(NS + '::' + k); }catch(e){} }
+
+let UI = Object.assign({ view:'home', setId:null, attemptId:null, navOpen:false, notesOpen:false, filter:'all' }, lsGet('ui', {}));
+UI.navOpen = false; UI.notesOpen = false;
+let S = null;   // in-progress test state for UI.setId
+let TUTOR = { key: lsGet('tutorKey', ''), attempts: null, loading:false, error:'', setFilter:'all', attempt:null };
+
+function saveUI(){ lsSet('ui', { view:UI.view, setId:UI.setId, attemptId:UI.attemptId, filter:UI.filter }); }
+function save(){ if (S && UI.setId) lsSet('prog::' + UI.setId, S); saveUI(); }
+function getSet(id){ return SETS.find(s => s.id === id); }
+function curSet(){ return getSet(UI.setId); }
+function questionsOf(set){ return set.questions.slice().sort((a,b)=>a.num-b.num); }
+function curQ(){ return questionsOf(curSet())[S.qIndex]; }
+function key(mod, num){ return String(num); }   // passage engine calls key(q.module, q.num)
+function getHistory(){ return lsGet('history', []); }
+function outbox(){ return lsGet('outbox', []); }
+
+function freshState(set){
+  return {
+    qIndex:0, answers:{}, firstAnswer:{}, changes:{}, marked:{}, struck:{}, highlights:{},
+    timeSpent:{}, elapsed:0, away:0, startedAt:new Date().toISOString(),
+    timeLeft: set.timeLimitMin ? set.timeLimitMin*60 : null,
+    elimOn:false, splitPct:50, timerHidden:false
+  };
+}
+
+/* ══════════════════ TIMER ══════════════════
+   One tick per second, credited to the question on screen. Time with the tab
+   hidden is NOT credited to any question; it is totalled separately as
+   "away" time so the per-question numbers reflect real working time. */
+let timerId = null, hiddenAt = null;
+function startTimer(){
+  stopTimer();
+  timerId = setInterval(()=>{
+    if (UI.view !== 'test' && UI.view !== 'review') return;
+    if (document.hidden) return;
+    S.elapsed++;
+    if (UI.view === 'test'){
+      const q = curQ(); const k = String(q.num);
+      S.timeSpent[k] = (S.timeSpent[k] || 0) + 1;
+    }
+    if (S.timeLeft != null){
+      S.timeLeft--;
+      if (S.timeLeft <= 0){ S.timeLeft = 0; updateTimerDisplay(); submitSet(true); return; }
+    }
+    updateTimerDisplay();
+    save();
+  }, 1000);
+}
+function stopTimer(){ if (timerId){ clearInterval(timerId); timerId = null; } }
+document.addEventListener('visibilitychange', () => {
+  if (!S || (UI.view !== 'test' && UI.view !== 'review')) return;
+  if (document.hidden){ hiddenAt = Date.now(); }
+  else if (hiddenAt){ S.away += Math.round((Date.now() - hiddenAt)/1000); hiddenAt = null; save(); }
+});
+function fmtTime(s){
+  s = Math.max(0, Math.round(s||0));
+  const h = Math.floor(s/3600), m = Math.floor((s%3600)/60), sec = s%60;
+  return (h ? h + ':' + String(m).padStart(2,'0') : m) + ':' + String(sec).padStart(2,'0');
+}
+function fmtSec(s){ s = Math.round(s||0); return s < 60 ? s + 's' : fmtTime(s); }
+function updateTimerDisplay(){
+  const el = document.getElementById('timerVal');
+  if (el) el.textContent = fmtTime(S.timeLeft != null ? S.timeLeft : S.elapsed);
+}
+
+/* ══════════════════ NAVIGATION ══════════════════ */
+function openSet(id, restart){
+  const set = getSet(id); if (!set) return;
+  UI.setId = id;
+  S = (!restart && lsGet('prog::' + id, null)) || freshState(set);
+  UI.view = 'test'; UI.navOpen = false;
+  save(); render(); startTimer();
+}
+function goHome(){
+  stopTimer(); UI.view = 'home'; UI.navOpen = false; UI.notesOpen = false;
+  if (location.hash) history_replace('');
+  saveUI(); render();
+}
+function history_replace(hash){ try{ window.history.replaceState(null, '', location.pathname + location.search + hash); }catch(e){} }
+function nextQuestion(){
+  const total = curSet().questions.length;
+  if (S.qIndex < total - 1){ S.qIndex++; render(); }
+  else { UI.view = 'review'; render(); }
+}
+function prevQuestion(){ if (S.qIndex > 0){ S.qIndex--; render(); } }
+function jumpTo(i){ S.qIndex = i; UI.navOpen = false; UI.view = 'test'; render(); }
+
+/* ══════════════════ ANSWER / MARK / ELIMINATE ══════════════════ */
+function selectAnswer(letter){
+  const k = String(curQ().num);
+  const prev = S.answers[k];
+  if (prev === letter){ delete S.answers[k]; }
+  else {
+    if (!S.firstAnswer[k]) S.firstAnswer[k] = letter;
+    if (prev) S.changes[k] = (S.changes[k] || 0) + 1;
+    S.answers[k] = letter;
+  }
+  save(); render();
+}
+function toggleMark(){ const k = String(curQ().num); S.marked[k] = !S.marked[k]; save(); render(); }
+function toggleElimVisible(){ S.elimOn = !S.elimOn; save(); render(); }
+function toggleStruck(letter, ev){
+  ev.stopPropagation();
+  const k = String(curQ().num);
+  if (!S.struck[k]) S.struck[k] = {};
+  S.struck[k][letter] = !S.struck[k][letter];
+  save(); render();
+}
+
+/* ══════════════════ HIGHLIGHTING + PASSAGE RENDERING ══════════════════
+   Copied verbatim from the bluebook-practice-site template engine. */
+let pendingRange = null;
+function onPassageMouseUp(e){
+  const sel = window.getSelection();
+  removeSelToolbar();
+  if (!sel || sel.isCollapsed || sel.toString().trim().length === 0) return;
+  const range = sel.getRangeAt(0);
+  const passageEl = document.getElementById('passageText');
+  if (!passageEl || !passageEl.contains(range.commonAncestorContainer)) return;
+  if (isInsideChartVisible(range.startContainer) || isInsideChartVisible(range.endContainer)) return;
+  const start = offsetInPassage(passageEl, range.startContainer, range.startOffset);
+  const end = offsetInPassage(passageEl, range.endContainer, range.endOffset);
+  if (end <= start) return;
+  pendingRange = { start, end };
+  const rect = range.getBoundingClientRect();
+  const tb = document.createElement('div');
+  tb.className = 'sel-toolbar';
+  tb.style.left = (rect.left + window.scrollX) + 'px';
+  tb.style.top = (rect.top + window.scrollY - 38) + 'px';
+  tb.id = 'selToolbar';
+  tb.innerHTML = '<button onclick="applyHighlight()">Highlight</button>';
+  document.body.appendChild(tb);
+}
+function removeSelToolbar(){ const t = document.getElementById('selToolbar'); if (t) t.remove(); }
+function applyHighlight(){
+  if (!pendingRange) return;
+  const k = String(curQ().num);
+  const id = 'hl_' + Date.now() + '_' + Math.floor(Math.random()*1000);
+  if (!S.highlights[k]) S.highlights[k] = [];
+  S.highlights[k].push({ id, start: pendingRange.start, end: pendingRange.end, note:'' });
+  window.getSelection().removeAllRanges();
+  pendingRange = null;
+  removeSelToolbar();
+  save(); render();
+}
+function removeHighlight(k, id){
+  if (S.highlights[k]) S.highlights[k] = S.highlights[k].filter(h => h.id !== id);
+  save(); render();
+}
+function updateNote(k, id, val){
+  const arr = S.highlights[k]; if (!arr) return;
+  const item = arr.find(h => h.id === id); if (item){ item.note = val; }
+  const markEl = document.querySelector('mark[data-id="'+id+'"]');
+  if (markEl) markEl.classList.toggle('noted', !!val);
+  save();
+}
+/* Chart blocks render VISIBLE labels (title, axis, bars, legend) built fresh
+   from parsed JSON — that text has no 1:1 correspondence with q.passage
+   characters (unlike table cells, which reuse the exact original substring).
+   Only the hidden .pchart-src span holds the real, offset-accurate text, so
+   the walker must skip everything under .pchart-visible or counts drift for
+   any highlight made after a chart. */
+function offsetInPassage(passageEl, node, nodeOffset){
+  const walker = document.createTreeWalker(passageEl, NodeFilter.SHOW_TEXT, {
+    acceptNode: function(n){
+      const el = n.parentElement;
+      return (el && el.closest('.pchart-visible')) ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT;
+    }
+  });
+  let total = 0;
+  let n;
+  while ((n = walker.nextNode())){
+    if (n === node) return total + nodeOffset;
+    total += n.nodeValue.length;
+  }
+  return total;
+}
+function isInsideChartVisible(node){
+  const el = node.nodeType === 1 ? node : node.parentElement;
+  return !!(el && el.closest('.pchart-visible'));
+}
+/* Detects contiguous runs of 2+ lines that each contain 2+ "|" separators
+   (i.e. a pipe-delimited data table extracted from a source PDF graphic) within
+   a substring of passage text. Returns offsets local to that substring so
+   character counts/order are never altered — only visual layout changes,
+   which keeps highlight offsets (computed against the raw q.passage string)
+   valid both inside and after a rendered table. */
+function findTableBlocks(text){
+  const blocks = [];
+  const n = text.length;
+  let i = 0;
+  while (i < n){
+    let lineEnd = text.indexOf('\n', i);
+    if (lineEnd === -1) lineEnd = n;
+    const pipes = (text.slice(i, lineEnd).match(/\|/g) || []).length;
+    if (pipes >= 1){
+      const blockStart = i;
+      let lastLineEnd = lineEnd;
+      let lineCount = 1;
+      let cursor = lineEnd < n ? lineEnd + 1 : n;
+      while (cursor < n){
+        let nextEnd = text.indexOf('\n', cursor);
+        if (nextEnd === -1) nextEnd = n;
+        const nextPipes = (text.slice(cursor, nextEnd).match(/\|/g) || []).length;
+        if (nextPipes < 1) break;
+        lastLineEnd = nextEnd;
+        lineCount++;
+        cursor = nextEnd < n ? nextEnd + 1 : n;
+      }
+      if (lineCount >= 2) blocks.push({ start: blockStart, end: lastLineEnd });
+      i = cursor > blockStart ? cursor : (lineEnd < n ? lineEnd + 1 : n);
+    } else {
+      i = lineEnd < n ? lineEnd + 1 : n;
+    }
+  }
+  return blocks;
+}
+/* Renders a table block as real DOM table layout while keeping every original
+   character (including "|" separators and newlines) present as hidden text
+   nodes, so TreeWalker-based offset math (offsetInPassage) still lines up
+   exactly with q.passage indices for any highlight made before or after it. */
+function renderTableBlock(raw){
+  const lines = raw.split('\n');
+  let out = '<div class="ptable-wrap"><div class="ptable">';
+  lines.forEach((line, li) => {
+    out += '<div class="ptable-row' + (li===0 ? ' ptable-head' : '') + '">';
+    const parts = line.split('|');
+    parts.forEach((part, pi) => {
+      out += '<span class="ptable-cell">' + escKeepUnderline(part) + '</span>';
+      if (pi < parts.length - 1) out += '<span class="ptable-sep">|</span>';
+    });
+    out += '</div>';
+    if (li < lines.length - 1) out += '<span class="ptable-nl">\n</span>';
+  });
+  out += '</div></div>';
+  return out;
+}
+/* Detects [[CHART:{...json...}]] tags embedded in passage text (used for
+   quantitative Command of Evidence questions whose source graphic is a bar
+   chart). Schema: {title, yLabel, yMax, xLabel, categories:[...],
+   series:[{name, values:[...]}], valuePrefix, valueSuffix}. */
+function findChartBlocks(text){
+  const blocks = [];
+  const re = /\[\[CHART:(.*?)\]\]/g;
+  let m;
+  while ((m = re.exec(text))){
+    blocks.push({ start: m.index, end: m.index + m[0].length });
+  }
+  return blocks;
+}
+function findSpecialBlocks(text){
+  return findTableBlocks(text).map(b => Object.assign({kind:'table'}, b))
+    .concat(findChartBlocks(text).map(b => Object.assign({kind:'chart'}, b)))
+    .sort((a,b) => a.start - b.start);
+}
+const CHART_SERIES_COLORS = ['#2a78d6','#008300','#e87ba4','#eda100','#1baf7a','#eb6834','#4a3aa7','#e34948'];
+function fmtChartNum(v){
+  const rounded = Math.round(v*100)/100;
+  return rounded.toLocaleString('en-US', {maximumFractionDigits:2});
+}
+function roundedTopRectPath(x,y,w,h,r){
+  r = Math.max(0, Math.min(r, w/2, h));
+  return 'M'+x+','+(y+h)+' L'+x+','+(y+r)+' Q'+x+','+y+' '+(x+r)+','+y+
+         ' L'+(x+w-r)+','+y+' Q'+(x+w)+','+y+' '+(x+w)+','+(y+r)+' L'+(x+w)+','+(y+h)+' Z';
+}
+function buildBarChartSvg(data){
+  const W = 560, H = 232;
+  const marginLeft = 54, marginRight = 12, marginTop = 22, marginBottom = 34;
+  const plotW = W - marginLeft - marginRight;
+  const plotH = H - marginTop - marginBottom;
+  const yMax = data.yMax;
+  const cats = data.categories;
+  const series = data.series;
+  const n = cats.length;
+  const s = series.length;
+  const groupGap = 20;
+  const groupW = plotW / n;
+  const barGap = 2;
+  let barW = Math.min(24, (groupW - groupGap - (s-1)*barGap) / s);
+  if (barW < 3) barW = Math.max(3, (groupW - groupGap - (s-1)*barGap) / s);
+  const groupUsedW = s*barW + (s-1)*barGap;
+  const prefix = data.valuePrefix || '';
+  const suffix = data.valueSuffix || '';
+
+  let svg = '<svg class="pchart-svg" viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="xMinYMin meet" role="img" aria-label="'+esc(data.title||'bar chart')+'">';
+
+  for (let i=0;i<=4;i++){
+    const gy = marginTop + plotH - (plotH * i/4);
+    const val = yMax * i/4;
+    svg += '<line x1="'+marginLeft+'" y1="'+gy+'" x2="'+(marginLeft+plotW)+'" y2="'+gy+'" class="pchart-grid"/>';
+    svg += '<text x="'+(marginLeft-8)+'" y="'+(gy+3)+'" text-anchor="end" class="pchart-tick">'+fmtChartNum(val)+'</text>';
+  }
+  svg += '<line x1="'+marginLeft+'" y1="'+marginTop+'" x2="'+marginLeft+'" y2="'+(marginTop+plotH)+'" class="pchart-axis"/>';
+  svg += '<line x1="'+marginLeft+'" y1="'+(marginTop+plotH)+'" x2="'+(marginLeft+plotW)+'" y2="'+(marginTop+plotH)+'" class="pchart-axis"/>';
+
+  cats.forEach((cat, ci) => {
+    const groupX = marginLeft + ci*groupW + (groupW - groupUsedW)/2;
+    series.forEach((sr, si) => {
+      const v = sr.values[ci];
+      const barH = plotH * (v / yMax);
+      const bx = groupX + si*(barW+barGap);
+      const by = marginTop + plotH - barH;
+      const color = CHART_SERIES_COLORS[si % CHART_SERIES_COLORS.length];
+      svg += '<path d="'+roundedTopRectPath(bx,by,barW,barH,4)+'" style="fill:'+color+'"/>';
+      const label = prefix + fmtChartNum(v) + suffix;
+      svg += '<text x="'+(bx+barW/2)+'" y="'+(by-4)+'" text-anchor="middle" class="pchart-vallabel">'+esc(label)+'</text>';
+    });
+    svg += '<foreignObject x="'+(marginLeft + ci*groupW)+'" y="'+(marginTop+plotH+4)+'" width="'+groupW+'" height="'+(marginBottom-4)+'">'+
+           '<div xmlns="http://www.w3.org/1999/xhtml" class="pchart-catlabel">'+esc(cat)+'</div></foreignObject>';
+  });
+
+  svg += '</svg>';
+  return svg;
+}
+function buildLineChartSvg(data){
+  const W = 560, H = 232;
+  const marginLeft = 54, marginRight = 12, marginTop = 22, marginBottom = 34;
+  const plotW = W - marginLeft - marginRight;
+  const plotH = H - marginTop - marginBottom;
+  const yMax = data.yMax;
+  const cats = data.categories;
+  const series = data.series;
+  const n = cats.length;
+  const prefix = data.valuePrefix || '';
+  const suffix = data.valueSuffix || '';
+  const xStep = n > 1 ? plotW / (n - 1) : 0;
+  const xPos = (ci) => n > 1 ? marginLeft + ci*xStep : marginLeft + plotW/2;
+  const labelW = n > 1 ? Math.min(90, xStep) : 90;
+
+  let svg = '<svg class="pchart-svg" viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="xMinYMin meet" role="img" aria-label="'+esc(data.title||'line chart')+'">';
+
+  for (let i=0;i<=4;i++){
+    const gy = marginTop + plotH - (plotH * i/4);
+    const val = yMax * i/4;
+    svg += '<line x1="'+marginLeft+'" y1="'+gy+'" x2="'+(marginLeft+plotW)+'" y2="'+gy+'" class="pchart-grid"/>';
+    svg += '<text x="'+(marginLeft-8)+'" y="'+(gy+3)+'" text-anchor="end" class="pchart-tick">'+fmtChartNum(val)+'</text>';
+  }
+  svg += '<line x1="'+marginLeft+'" y1="'+marginTop+'" x2="'+marginLeft+'" y2="'+(marginTop+plotH)+'" class="pchart-axis"/>';
+  svg += '<line x1="'+marginLeft+'" y1="'+(marginTop+plotH)+'" x2="'+(marginLeft+plotW)+'" y2="'+(marginTop+plotH)+'" class="pchart-axis"/>';
+
+  series.forEach((sr, si) => {
+    const color = CHART_SERIES_COLORS[si % CHART_SERIES_COLORS.length];
+    let pathD = '';
+    sr.values.forEach((v, ci) => {
+      const px = xPos(ci);
+      const py = marginTop + plotH - plotH*(v/yMax);
+      pathD += (ci===0 ? 'M' : 'L') + px + ',' + py + ' ';
+    });
+    svg += '<path d="'+pathD.trim()+'" style="fill:none;stroke:'+color+';stroke-width:2;stroke-linejoin:round;stroke-linecap:round"/>';
+    sr.values.forEach((v, ci) => {
+      const px = xPos(ci);
+      const py = marginTop + plotH - plotH*(v/yMax);
+      svg += '<circle cx="'+px+'" cy="'+py+'" r="4" style="fill:'+color+';stroke:var(--white);stroke-width:2"/>';
+      const label = prefix + fmtChartNum(v) + suffix;
+      svg += '<text x="'+px+'" y="'+(py-8)+'" text-anchor="middle" class="pchart-vallabel">'+esc(label)+'</text>';
+    });
+  });
+
+  cats.forEach((cat, ci) => {
+    const px = xPos(ci);
+    svg += '<foreignObject x="'+(px-labelW/2)+'" y="'+(marginTop+plotH+4)+'" width="'+labelW+'" height="'+(marginBottom-4)+'">'+
+           '<div xmlns="http://www.w3.org/1999/xhtml" class="pchart-catlabel">'+esc(cat)+'</div></foreignObject>';
+  });
+
+  svg += '</svg>';
+  return svg;
+}
+function renderChartBlock(raw){
+  let data;
+  try {
+    data = JSON.parse(raw.slice('[[CHART:'.length, raw.length - 2));
+  } catch(e){
+    return escKeepUnderline(raw);
+  }
+  let html = '<div class="pchart-wrap"><div class="pchart-visible">';
+  if (data.title) html += '<div class="pchart-title">' + esc(data.title) + '</div>';
+  if (data.yLabel) html += '<div class="pchart-ylabel">' + esc(data.yLabel) + '</div>';
+  html += (data.type === 'line') ? buildLineChartSvg(data) : buildBarChartSvg(data);
+  if (data.xLabel) html += '<div class="pchart-xlabel">' + esc(data.xLabel) + '</div>';
+  if (data.series.length > 1){
+    html += '<div class="pchart-legend">' + data.series.map((sr,i) =>
+      '<span class="pchart-legend-item"><span class="pchart-swatch" style="background:' + CHART_SERIES_COLORS[i % CHART_SERIES_COLORS.length] + '"></span>' + esc(sr.name) + '</span>'
+    ).join('') + '</div>';
+  }
+  html += '</div>';
+  html += '<span class="pchart-src">' + escKeepUnderline(raw) + '</span>';
+  html += '</div>';
+  return html;
+}
+function renderPassageSegment(segment){
+  const blocks = findSpecialBlocks(segment);
+  if (blocks.length === 0) return escKeepUnderline(segment);
+  let out = '';
+  let pos = 0;
+  blocks.forEach(b => {
+    if (b.start > pos) out += escKeepUnderline(segment.slice(pos, b.start));
+    out += (b.kind === 'table') ? renderTableBlock(segment.slice(b.start, b.end)) : renderChartBlock(segment.slice(b.start, b.end));
+    pos = b.end;
+  });
+  if (pos < segment.length) out += escKeepUnderline(segment.slice(pos));
+  return out;
+}
+function buildPassageHtml(q){
+  const k = key(q.module, q.num);
+  const hls = (S.highlights[k]||[]).slice().sort((a,b)=>a.start-b.start);
+  const text = q.passage;
+  let out = '';
+  let pos = 0;
+  hls.forEach(h => {
+    const s = Math.max(pos, Math.min(h.start, text.length));
+    const en = Math.max(s, Math.min(h.end, text.length));
+    if (s > pos) out += renderPassageSegment(text.slice(pos, s));
+    out += '<mark class="hl' + (h.note?' noted':'') + '" data-id="' + h.id + '" onclick="removeHighlight(\'' + k + '\',\'' + h.id + '\')">' + escKeepUnderline(text.slice(s, en)) + '</mark>';
+    pos = en;
+  });
+  if (pos < text.length) out += renderPassageSegment(text.slice(pos));
+  return out;
+}
+
+
+/* ══════════════════ DIVIDER DRAG (bound once, delegated) ══════════════════ */
+let dividerDragging = false;
+function initDividerOnce(){
+  document.addEventListener('mousedown', (e) => {
+    if (e.target && e.target.id === 'divider'){ dividerDragging = true; document.body.style.userSelect = 'none'; }
+  });
+  document.addEventListener('mousemove', (e) => {
+    if (!dividerDragging) return;
+    const split = document.getElementById('splitWrap');
+    const paneL = document.getElementById('paneL');
+    const paneR = document.getElementById('paneR');
+    if (!split || !paneL || !paneR) return;
+    const rect = split.getBoundingClientRect();
+    let pct = ((e.clientX - rect.left) / rect.width) * 100;
+    pct = Math.max(25, Math.min(75, pct));
+    S.splitPct = pct;
+    paneL.style.width = pct + '%';
+    paneR.style.width = (100-pct) + '%';
+  });
+  document.addEventListener('mouseup', () => {
+    if (dividerDragging){ dividerDragging = false; document.body.style.userSelect=''; save(); }
+  });
+}
+
+/* ══════════════════ MODAL ══════════════════ */
+function showModal(title, body, buttons){
+  closeModal();
+  const bg = document.createElement('div');
+  bg.className = 'modal-bg'; bg.id = 'modalBg';
+  bg.innerHTML = `<div class="modal" role="dialog" aria-modal="true"><h2>${title}</h2><p>${body}</p>
+    <div class="modal-btns">${buttons.map((b,i)=>`<button class="btn ${b.primary?'btn-primary':'btn-outline'}" data-i="${i}">${b.label}</button>`).join('')}</div></div>`;
+  bg.querySelectorAll('button[data-i]').forEach(btn => btn.onclick = () => { closeModal(); const f = buttons[+btn.dataset.i].onClick; if (f) f(); });
+  document.body.appendChild(bg);
+}
+function closeModal(){ const m = document.getElementById('modalBg'); if (m) m.remove(); }
+
+/* ══════════════════ RENDER: TEST ══════════════════ */
+function renderHeader(){
+  const set = curSet();
+  const countdown = S.timeLeft != null;
+  return `
+  <div class="hdr">
+    <div class="hdr-row">
+      <div>
+        <div class="hdr-title">${esc(set.title)}</div>
+        <div class="hdr-sub">Reading and Writing · ${set.questions.length} questions${countdown ? ' · ' + set.timeLimitMin + ' min' : ''}</div>
+      </div>
+      <div class="hdr-mid">
+        <div class="hdr-timer ${S.timerHidden?'hidden-t':''}" id="timerVal">${fmtTime(countdown ? S.timeLeft : S.elapsed)}</div>
+        <button class="pill-btn" onclick="S.timerHidden=!S.timerHidden; save(); render();">${S.timerHidden?'Show':'Hide'}</button>
+      </div>
+      <div class="hdr-right">
+        <button class="hdr-icon-btn" onclick="UI.notesOpen=true; renderNotesPanel();">${ICO.notes}<span>Notes</span></button>
+        <button class="hdr-icon-btn" onclick="confirmLeave()">${ICO.home}<span>Save &amp; exit</span></button>
+      </div>
+    </div>
+  </div>
+  <div class="banner">${esc(CONFIG.student)}'s practice set</div>`;
+}
+function confirmLeave(){
+  showModal('Save and exit?', 'Your answers are saved on this device. The clock stops while you are away, and you can come back to this set later.',
+    [{label:'Keep working'}, {label:'Save & exit', primary:true, onClick: goHome}]);
+}
+
+function renderTest(){
+  const set = curSet();
+  const q = curQ();
+  const list = questionsOf(set);
+  const k = String(q.num);
+  const selected = S.answers[k];
+  const struckMap = S.struck[k] || {};
+  const elimOn = !!S.elimOn;
+  const marked = !!S.marked[k];
+
+  const choicesHtml = q.unscored ? `
+    <div style="background:var(--paper); border:1.5px dashed var(--line); border-radius:10px; padding:1rem; color:var(--muted); font-size:0.9rem;">
+      This question is missing from the source material — there's nothing to answer here. Click Next to continue.
+    </div>` : ['A','B','C','D'].map(letter => {
+    const isSel = selected === letter;
+    const isStruck = !!struckMap[letter];
+    return `
+    <div class="choice-row">
+      <button class="choice ${isSel?'selected':''} ${isStruck?'struck':''}" onclick="selectAnswer('${letter}')">
+        <span class="choice-key">${letter}</span>
+        <span class="choice-text">${esc(q.choices[letter])}</span>
+      </button>
+      <div class="elim-circle ${isStruck?'struck':''}" onclick="toggleStruck('${letter}', event)">${letter}</div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('app').innerHTML = `
+    ${renderHeader()}
+    <div class="split" id="splitWrap">
+      <div class="pane pane-l" id="paneL" style="width:${S.splitPct}%">
+        ${q.unscored ? `<div class="passage" style="color:var(--faint)">(No passage — question unavailable in source material)</div>` : `<div class="passage" id="passageText" onmouseup="onPassageMouseUp(event)">${buildPassageHtml(q)}</div>`}
+      </div>
+      <div class="divider" id="divider"></div>
+      <div class="pane pane-r ${elimOn?'elim-visible':''}" id="paneR" style="width:${100-S.splitPct}%">
+        <div class="qhead">
+          <div class="qnum-badge">${q.num}</div>
+          <button class="mark-btn ${marked?'active':''}" onclick="toggleMark()">${marked?ICO.bookmarkFill:ICO.bookmark} Mark for Review</button>
+          <div class="qhead-spacer"></div>
+          ${q.unscored ? '' : `<button class="elim-btn ${elimOn?'active':''}" onclick="toggleElimVisible()">ABC</button>`}
+        </div>
+        ${q.unscored ? '' : `<div class="prompt">${esc(q.prompt)}</div>`}
+        <div class="choices">${choicesHtml}</div>
+      </div>
+    </div>
+    ${renderFooter(list)}
+  `;
+  renderNotesPanel();
+}
+
+function renderFooter(list){
+  const isFirst = S.qIndex === 0;
+  const isLast = S.qIndex === list.length - 1;
+  return `
+  <div class="ftr">
+    <div class="ftr-name">${esc(CONFIG.student)}</div>
+    <div class="ftr-mid">
+      <button class="nav-toggle" onclick="UI.navOpen=!UI.navOpen; render();">Question ${S.qIndex+1} of ${list.length} ${ICO.chev}</button>
+      ${UI.navOpen ? renderNavigator(list) : ''}
+    </div>
+    <div class="ftr-btns">
+      ${isFirst? '' : `<button class="btn btn-outline" onclick="prevQuestion()">Back</button>`}
+      <button class="btn btn-primary" onclick="nextQuestion()">${isLast? 'Review' : 'Next'}</button>
+    </div>
+  </div>`;
+}
+
+function renderNavigator(list, isStatic){
+  const cells = list.map((q,i) => {
+    const k = String(q.num);
+    const answered = !!S.answers[k];
+    const marked = !!S.marked[k];
+    const cur = !isStatic && i === S.qIndex;
+    return `<div class="navi-cell ${answered?'answered':''} ${cur?'current':''}" onclick="jumpTo(${i})">
+      ${q.num}${marked? `<span class="flag">${ICO.bookmarkFill}</span>` : ''}
+    </div>`;
+  }).join('');
+  return `
+  <div class="navi-pop ${isStatic?'static':''}">
+    <div class="navi-title">Question Navigator</div>
+    <div class="navi-grid">${cells}</div>
+    <div class="navi-legend">
+      <span><i class="legend-dot answered"></i> Answered</span>
+      <span><i class="legend-dot"></i> Unanswered</span>
+      <span>${ICO.bookmarkFill.replace('currentColor','#8A5A00')} Marked for review</span>
+    </div>
+  </div>`;
+}
+
+function renderNotesPanel(){
+  let panel = document.getElementById('notesPanel');
+  if (!panel){
+    panel = document.createElement('div');
+    panel.id = 'notesPanel';
+    document.body.appendChild(panel);
+  }
+  panel.className = 'notes-panel' + (UI.notesOpen ? ' open' : '');
+  if (!S || !curSet()){ panel.innerHTML = ''; return; }
+  const items = [];
+  questionsOf(curSet()).forEach(q => {
+    const k = String(q.num);
+    (S.highlights[k]||[]).forEach(h => items.push({q, h, k}));
+  });
+  panel.innerHTML = `
+    <div class="notes-hd"><h3>Highlights &amp; Notes</h3><button onclick="UI.notesOpen=false; renderNotesPanel();">&times;</button></div>
+    <div class="notes-body">
+      ${items.length===0 ? '<div class="empty-note">Select text in the passage and choose "Highlight" to save it here.</div>' :
+      items.map(({q,h,k}) => `
+        <div class="note-item">
+          <div class="qtag">Q${q.num}</div>
+          <div class="htext">"${escKeepUnderline(q.passage.slice(h.start, h.end))}"</div>
+          <textarea placeholder="Add a note..." oninput="updateNote('${k}','${h.id}', this.value)">${esc(h.note||'')}</textarea>
+          <button class="remove" onclick="removeHighlight('${k}','${h.id}')">Remove highlight</button>
+        </div>`).join('')}
+    </div>`;
+}
+
+function renderReview(){
+  const list = questionsOf(curSet());
+  const unanswered = list.filter(q => !q.unscored && !S.answers[String(q.num)]).length;
+  const markedN = list.filter(q => S.marked[String(q.num)]).length;
+  document.getElementById('app').innerHTML = `
+    ${renderHeader()}
+    <div class="page" style="max-width:560px">
+      <h1 style="font-size:1.4rem; margin-bottom:0.5rem;">Check your work</h1>
+      <p class="muted" style="margin-bottom:1.2rem;">${unanswered ? `<b style="color:var(--red)">${unanswered} unanswered.</b> ` : 'Every question has an answer. '}${markedN ? markedN + ' marked for review. ' : ''}Click a number to go back to it.</p>
+      ${renderNavigator(list, true)}
+      <div style="margin-top:1.2rem; display:flex; justify-content:space-between; gap:0.6rem;">
+        <button class="btn btn-outline" onclick="jumpTo(${list.length-1})">Back</button>
+        <button class="btn btn-primary" onclick="confirmSubmit(${unanswered})">Submit</button>
+      </div>
+    </div>`;
+  renderNotesPanel();
+}
+function confirmSubmit(unanswered){
+  showModal('Submit this set?',
+    (unanswered ? `You still have <b>${unanswered}</b> unanswered question${unanswered>1?'s':''}. ` : '') + 'After you submit, you cannot change your answers. Your results go to your tutor.',
+    [{label:'Not yet'}, {label:'Submit', primary:true, onClick: () => submitSet(false)}]);
+}
+
+/* ══════════════════ SUBMIT + SYNC ══════════════════ */
+function buildAttempt(set, st, timedOut){
+  const qs = questionsOf(set);
+  const items = qs.map(q => {
+    const k = String(q.num);
+    const ans = st.answers[k] || null;
+    return {
+      n: q.num, ans, key: q.unscored ? null : q.correctAnswer,
+      ok: q.unscored ? null : (ans === q.correctAnswer),
+      sec: st.timeSpent[k] || 0,
+      first: st.firstAnswer[k] || null,
+      changes: st.changes[k] || 0,
+      marked: !!st.marked[k]
+    };
+  });
+  const scored = items.filter(it => it.key);
+  return {
+    id: 'a_' + Date.now().toString(36) + Math.random().toString(36).slice(2,7),
+    student: CONFIG.student, setId: set.id, setTitle: set.title,
+    startedAt: st.startedAt, submittedAt: new Date().toISOString(),
+    score: scored.filter(it => it.ok).length, total: scored.length,
+    totalSeconds: st.elapsed, awaySeconds: st.away, timedOut: !!timedOut,
+    items
+  };
+}
+function submitSet(timedOut){
+  stopTimer(); closeModal();
+  const set = curSet();
+  const att = buildAttempt(set, S, timedOut);
+  const h = getHistory(); h.push(att); lsSet('history', h);
+  const o = outbox(); o.push(att); lsSet('outbox', o);
+  lsDel('prog::' + set.id);
+  S = null;
+  UI.view = 'result'; UI.attemptId = att.id; UI.filter = 'all';
+  saveUI(); render();
+  flushOutbox();
+}
+function syncConfigured(){ return /^https?:\/\//.test(CONFIG.submitUrl); }
+let flushing = false;
+async function flushOutbox(){
+  if (flushing || !syncConfigured()) return;
+  flushing = true;
+  try {
+    for (const att of outbox()){
+      try {
+        // text/plain keeps this a "simple" CORS request (no preflight), which Apps Script requires
+        const res = await fetch(CONFIG.submitUrl, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify(att) });
+        const data = await res.json();
+        if (!data.ok) throw new Error(data.error || 'rejected');
+        lsSet('outbox', outbox().filter(a => a.id !== att.id));
+      } catch(e){ break; }
+    }
+  } finally {
+    flushing = false;
+    if (UI.view === 'result' || UI.view === 'home') render();
+  }
+}
+
+/* ══════════════════ RENDER: HOME ══════════════════ */
+function renderHome(){
+  const h = getHistory();
+  const pending = outbox().length;
+  const categories = [];
+  SETS.forEach(set => {
+    const title = set.category || (/^boundaries-/i.test(set.id) ? 'Boundaries' : /-m[12]$/i.test(set.id) ? 'Practice Modules' : 'More Practice');
+    let group = categories.find(g => g.title === title);
+    if (!group){ group = { title, sets:[], anchor:'practice-' + categories.length }; categories.push(group); }
+    group.sets.push(set);
+  });
+  const priority = ['Boundaries', 'Practice Modules', 'Math'];
+  categories.sort((a,b) => {
+    const rank = g => priority.includes(g.title) ? priority.indexOf(g.title) : priority.length;
+    return rank(a) - rank(b);
+  });
+  const card = set => {
+    const prog = lsGet('prog::' + set.id, null);
+    const done = h.filter(a => a.setId === set.id);
+    const last = done[done.length-1];
+    let status, actions;
+    if (prog){
+      const answered = Object.keys(prog.answers).length;
+      status = `<span class="set-status prog">In progress · ${answered}/${set.questions.length} answered</span>`;
+      actions = `<button class="btn btn-primary btn-sm" onclick="openSet('${set.id}')">Continue</button>`;
+    } else if (last){
+      status = `<span class="set-status done">Done · ${last.score}/${last.total}${done.length>1 ? ` · ${done.length} attempts` : ''}</span>`;
+      actions = `<button class="btn btn-outline btn-sm" onclick="showResult('${last.id}')">View results</button>
+                 <button class="btn btn-outline btn-sm" onclick="confirmRetake('${set.id}')">Try again</button>`;
+    } else {
+      status = `<span class="set-status todo">Not started</span>`;
+      actions = `<button class="btn btn-primary btn-sm" onclick="openSet('${set.id}')">Start</button>`;
+    }
+    return `<div class="set-card">
+      <h3>${esc(set.title)}</h3>
+      <div class="set-meta">${set.questions.length} questions${set.timeLimitMin ? ' · ' + set.timeLimitMin + ' min limit' : ' · no time limit'}${set.note ? '<br>' + esc(set.note) : ''}</div>
+      ${status}
+      <div class="set-actions">${actions}</div>
+    </div>`;
+  };
+  const descriptions = {
+    'Boundaries':'Build punctuation and sentence-boundary skills with daily practice.',
+    'Practice Modules':'Practice complete Reading and Writing modules under timed conditions.',
+    'Math':'Build your SAT Math skills with focused practice.'
+  };
+  const sections = categories.map((group,index) => `<section class="practice-section" id="${group.anchor}" aria-labelledby="${group.anchor}-title">
+    <div class="practice-section-head"><h2 id="${group.anchor}-title">${index+1}. ${esc(group.title)}</h2><span class="practice-section-count">${group.sets.length} set${group.sets.length===1?'':'s'}</span></div>
+    ${descriptions[group.title] ? `<p class="section-description">${esc(descriptions[group.title])}</p>` : ''}
+    <div class="set-grid">${group.sets.map(card).join('')}</div>
+  </section>`).join('');
+  const navigation = categories.map(group => `<a href="#${group.anchor}" onclick="document.getElementById('${group.anchor}').scrollIntoView();return false;">${esc(group.title)}</a>`).join('') +
+    (ERRORLOG_HTML ? '<a href="#practice-review" onclick="document.getElementById(\'practice-review\').scrollIntoView();return false;">Error Log &amp; Twins</a>' : '');
+  const past = h.filter(a => getSet(a.setId)).reverse();
+  document.getElementById('app').innerHTML = `
+    <div class="page">
+      <div class="page-hd">
+        <div><div class="eyebrow">SAT Reading &amp; Writing</div><h1>Hi ${esc(CONFIG.student)}!</h1>
+        <p>Pick a set. Take your time, but stay on this tab. The clock pauses when you leave.</p></div>
+      </div>
+      ${navigation ? `<nav class="practice-nav" aria-label="Practice categories">${navigation}</nav>` : ''}
+      ${pending && syncConfigured() ? `<div class="sync wait">${pending} result${pending>1?'s':''} not sent to your tutor yet. Trying again now…</div>` : ''}
+      ${sections || '<p class="muted">No sets yet.</p>'}
+      ${ERRORLOG_HTML ? `<section class="practice-section" id="practice-review" aria-labelledby="practice-review-title">
+        <div class="practice-section-head"><h2 id="practice-review-title">${categories.length+1}. Error Log &amp; Twins</h2></div>
+        <p class="section-description">Review mistakes, then apply the same skills to new questions.</p>
+        <div class="set-card"><h3>Your error log</h3>
+        <div class="set-meta">${ERRORLOG_EMPTY ? 'No reviewed mistakes yet. After you complete practice, your tutor will add explanations and follow-up questions here.' : 'Your mistake patterns, questions to review, and twin practice. Your answers are saved and shared with your tutor.'}</div>
+        <div class="set-actions"><button class="btn btn-primary btn-sm" onclick="openErrorLog('student')">Open error log</button></div></div>
+      </section>` : ''}
+      ${past.length ? `
+        <div class="section-title">Your results</div>
+        <div class="tbl-wrap"><table class="tbl">
+          <tr><th>Date</th><th>Set</th><th>Score</th><th>Time</th></tr>
+          ${past.map(a => `<tr class="click" onclick="showResult('${a.id}')">
+            <td>${fmtDate(a.submittedAt)}</td><td>${esc(a.setTitle)}</td><td>${a.score}/${a.total}</td><td>${fmtTime(a.totalSeconds)}</td></tr>`).join('')}
+        </table></div>` : ''}
+      <div style="margin-top:3rem; text-align:center;">
+        <button class="back-link" style="color:var(--faint); font-weight:600;" onclick="askReset()">Clear saved progress on this device</button>
+      </div>
+    </div>`;
+}
+function confirmRetake(id){
+  showModal('Try this set again?', 'You will start from question 1 with a fresh clock. Your earlier result is kept.',
+    [{label:'Cancel'}, {label:'Start again', primary:true, onClick: () => openSet(id, true)}]);
+}
+function showResult(id){ UI.view = 'result'; UI.attemptId = id; UI.filter = 'all'; saveUI(); render(); window.scrollTo(0,0); }
+function fmtDate(iso){
+  const d = new Date(iso);
+  return d.toLocaleDateString('en-US', {month:'short', day:'numeric'}) + ', ' + d.toLocaleTimeString('en-US', {hour:'numeric', minute:'2-digit'});
+}
+
+/* ══════════════════ RENDER: ATTEMPT RESULT (shared by student + tutor) ══════════════════ */
+function statusOfItem(it){
+  if (!it.key) return 'unscored';
+  if (!it.ans) return 'unanswered';
+  return it.ok ? 'correct' : 'incorrect';
+}
+function isSlow(it){ return it.sec > CONFIG.paceSec * 1.5; }
+
+function timeChartSvg(att){
+  const items = att.items;
+  const n = items.length;
+  const W = 860, H = 210, ml = 34, mr = 8, mt = 14, mb = 26;
+  const pw = W - ml - mr, ph = H - mt - mb;
+  const maxSec = Math.max(CONFIG.paceSec * 1.6, ...items.map(it => it.sec));
+  const yMax = Math.ceil(maxSec / 30) * 30;
+  const slot = pw / n, bw = Math.max(4, Math.min(22, slot - 4));
+  const y = v => mt + ph - ph * (v / yMax);
+  let svg = `<svg class="tchart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Seconds spent on each question">`;
+  for (let v = 0; v <= yMax; v += yMax > 240 ? 60 : 30){
+    svg += `<line x1="${ml}" x2="${W-mr}" y1="${y(v)}" y2="${y(v)}" stroke="#E6EAF0"/>`;
+    svg += `<text x="${ml-6}" y="${y(v)+3}" text-anchor="end">${v ? fmtTime(v) : '0'}</text>`;
+  }
+  items.forEach((it, i) => {
+    const st = statusOfItem(it);
+    const color = st === 'correct' ? 'var(--bar-ok)' : st === 'incorrect' ? 'var(--bar-bad)' : 'var(--bar-blank)';
+    const x = ml + i*slot + (slot - bw)/2;
+    const top = y(it.sec), h = Math.max(1, mt + ph - top);
+    svg += `<rect class="bar" x="${x}" y="${mt+ph-h}" width="${bw}" height="${h}" rx="2" fill="${color}" onclick="focusItem(${it.n})"><title>Q${it.n}: ${fmtSec(it.sec)} · ${st}</title></rect>`;
+    if (n <= 30 || i % 2 === 0) svg += `<text x="${x + bw/2}" y="${H-10}" text-anchor="middle">${it.n}</text>`;
+  });
+  const py = y(CONFIG.paceSec);
+  svg += `<line class="pace" x1="${ml}" x2="${W-mr}" y1="${py}" y2="${py}"/>`;
+  svg += `<text class="pace-lbl" x="${W-mr}" y="${py-4}" text-anchor="end">SAT pace ${CONFIG.paceSec}s</text>`;
+  return svg + '</svg>';
+}
+function focusItem(n){
+  const el = document.getElementById('ri-' + n);
+  if (!el) return;
+  if (UI.filter !== 'all' && !el.offsetParent){ UI.filter = 'all'; render(); return focusItem(n); }
+  el.open = true; el.scrollIntoView({behavior:'smooth', block:'center'});
+  el.classList.add('flash'); setTimeout(() => el.classList.remove('flash'), 1200);
+}
+
+function insightsHtml(att){
+  const it = att.items.filter(x => x.key);
+  const avg = arr => arr.length ? Math.round(arr.reduce((s,x)=>s+x.sec,0)/arr.length) : null;
+  const right = it.filter(x => x.ok), wrong = it.filter(x => x.ans && !x.ok);
+  const slow = it.filter(isSlow);
+  const changedAway = it.filter(x => x.first === x.key && x.ans && x.ans !== x.key);
+  const changedTo = it.filter(x => x.changes && x.first !== x.key && x.ans === x.key);
+  const rushedWrong = wrong.filter(x => x.sec < CONFIG.paceSec * 0.5);
+  const qs = arr => arr.length ? 'Q' + arr.map(x=>x.n).join(', Q') : 'none';
+  return `<div class="insights">
+    <div class="ins"><div class="v">${avg(right) != null ? fmtSec(avg(right)) : '—'} / ${avg(wrong) != null ? fmtSec(avg(wrong)) : '—'}</div><div class="k">Avg time on correct / incorrect</div></div>
+    <div class="ins"><div class="v">${slow.length}</div><div class="k">Over ${fmtSec(CONFIG.paceSec*1.5)} (slow): ${qs(slow)}</div></div>
+    <div class="ins"><div class="v">${rushedWrong.length}</div><div class="k">Wrong in under ${fmtSec(CONFIG.paceSec*0.5)} (rushed?): ${qs(rushedWrong)}</div></div>
+    <div class="ins"><div class="v">${changedAway.length} / ${changedTo.length}</div><div class="k">Changed right→wrong / wrong→right${changedAway.length ? ': ' + qs(changedAway) : ''}</div></div>
+  </div>`;
+}
+
+function renderAttempt(att, opts){
+  const tutor = !!(opts && opts.tutor);
+  const set = getSet(att.setId);
+  const qByNum = {};
+  if (set) set.questions.forEach(q => qByNum[q.num] = q);
+  const pct = att.total ? Math.round(100*att.score/att.total) : 0;
+  const answeredN = att.items.filter(i => i.ans).length;
+  const avgSec = answeredN ? Math.round(att.items.reduce((s,i)=>s+i.sec,0) / att.items.length) : 0;
+
+  const filters = [
+    {id:'all', label:'All'}, {id:'incorrect', label:'Incorrect'}, {id:'correct', label:'Correct'},
+    {id:'slow', label:'Slow'}, {id:'flagged', label:'Marked'}
+  ];
+  const shown = att.items.filter(it => {
+    const st = statusOfItem(it);
+    if (UI.filter === 'all') return true;
+    if (UI.filter === 'slow') return isSlow(it);
+    if (UI.filter === 'flagged') return it.marked;
+    if (UI.filter === 'incorrect') return st === 'incorrect' || st === 'unanswered';
+    return st === UI.filter;
+  });
+
+  let syncHtml = '';
+  if (!tutor && syncConfigured()){
+    const waiting = outbox().some(a => a.id === att.id);
+    syncHtml = waiting
+      ? `<div class="sync wait">Sending your results to your tutor… If you're offline, they'll be sent the next time you open this site.</div>`
+      : `<div class="sync ok">✓ Results sent to your tutor.</div>`;
+  }
+
+  return `
+    <div class="score-hero">
+      <div><div class="lbl">Score</div><div class="big">${att.score} / ${att.total}</div><div class="lbl" style="margin-top:2px">${pct}% correct</div></div>
+      <div class="hero-stats">
+        <div><div class="lbl">Total time</div><div class="mid">${fmtTime(att.totalSeconds)}</div></div>
+        <div><div class="lbl">Avg / question</div><div class="mid">${fmtSec(avgSec)}</div></div>
+        ${tutor ? `<div><div class="lbl">Off-tab</div><div class="mid">${fmtTime(att.awaySeconds)}</div></div>` : ''}
+      </div>
+    </div>
+    ${att.timedOut ? `<div class="sync wait">Time ran out. The set was submitted automatically.</div>` : ''}
+    ${syncHtml}
+    <div class="card">
+      <h3>Time on each question</h3>
+      <div class="hint">Click a bar to jump to that question.</div>
+      ${timeChartSvg(att)}
+      <div class="legend"><span><i style="background:var(--bar-ok)"></i>Correct</span><span><i style="background:var(--bar-bad)"></i>Incorrect</span><span><i style="background:var(--bar-blank)"></i>Blank</span></div>
+    </div>
+    ${tutor ? insightsHtml(att) : ''}
+    <div class="filter-row">
+      ${filters.map(f=>`<button class="filter-chip ${UI.filter===f.id?'active':''}" onclick="UI.filter='${f.id}'; render();">${f.label}</button>`).join('')}
+    </div>
+    ${shown.length ? shown.map(it => renderReviewItem(it, qByNum[it.n], tutor)).join('') : '<p class="muted">No questions match this filter.</p>'}`;
+}
+
+function renderReviewItem(it, q, tutor){
+  const st = statusOfItem(it);
+  const slow = isSlow(it);
+  const head = `
+    <summary>
+      <span>Q${it.n}</span>
+      <span class="badge ${st}">${st}</span>
+      ${tutor && q && q.difficulty ? `<span class="badge unanswered">${esc(q.difficulty)}</span>` : ''}
+      ${it.marked ? '<span class="badge flagged">Marked</span>' : ''}
+      ${tutor && it.changes ? `<span class="badge changed">Changed ${it.changes}×</span>` : ''}
+      <span class="time-tag ${slow?'slow':''}">${it.sec ? fmtSec(it.sec) : '—'}</span>
+    </summary>`;
+  if (!q){
+    return `<details class="review-item" id="ri-${it.n}">${head}<div class="review-detail"><div class="rmeta">Answer: ${it.ans||'—'} · Correct: ${it.key||'—'} (question text not in this version of the site)</div></div></details>`;
+  }
+  if (q.unscored){
+    return `<details class="review-item" id="ri-${it.n}">${head}<div class="review-detail"><div class="rmeta">This question is missing from the source material, so it isn't scored.</div></div></details>`;
+  }
+  const choicesHtml = ['A','B','C','D'].map(letter=>{
+    let cls = 'review-choice';
+    if (q.correctAnswer === letter) cls += ' rc-correct';
+    else if (it.ans === letter) cls += ' rc-picked-wrong';
+    // tags, not " — label": many Boundaries choices end in a dash or colon themselves
+    const tag = q.correctAnswer===letter ? '<span class="rc-tag ok">Correct answer</span>'
+      : it.ans===letter ? `<span class="rc-tag bad">${tutor ? esc(CONFIG.student) + "'s answer" : 'Your answer'}</span>` : '';
+    return `<div class="${cls}"><b>${letter}.</b> ${esc(q.choices[letter])}${tag}</div>`;
+  }).join('');
+  const meta = tutor && it.first && it.first !== it.ans ? `<div class="rmeta">First picked ${it.first}, finished on ${it.ans || 'blank'}.</div>` : '';
+  return `
+  <details class="review-item" id="ri-${it.n}">
+    ${head}
+    <div class="review-detail">
+      <div class="rp">${renderPassageSegment(q.passage)}</div>
+      <div style="font-weight:600; margin-bottom:0.5rem;">${esc(q.prompt)}</div>
+      ${choicesHtml}
+      ${meta}
+    </div>
+  </details>`;
+}
+
+function renderResult(){
+  const att = getHistory().find(a => a.id === UI.attemptId);
+  if (!att){ UI.view = 'home'; return renderHome(); }
+  document.getElementById('app').innerHTML = `
+    <div class="page">
+      <button class="back-link" onclick="goHome()">← All sets</button>
+      <div class="page-hd"><div><div class="eyebrow">Results · ${fmtDate(att.submittedAt)}</div><h1>${esc(att.setTitle)}</h1></div></div>
+      ${renderAttempt(att, {tutor:false})}
+    </div>`;
+}
+
+/* ══════════════════ TUTOR DASHBOARD (open the site with #tutor) ══════════════════ */
+async function tutorLoad(){
+  if (!syncConfigured()){ TUTOR.error = 'This site is not connected to a Google Sheet yet.'; render(); return; }
+  TUTOR.loading = true; TUTOR.error = ''; render();
+  try {
+    const res = await fetch(CONFIG.submitUrl + '?key=' + encodeURIComponent(TUTOR.key));
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.error === 'bad key' ? 'That tutor key is not right.' : (data.error || 'Could not load results.'));
+    TUTOR.attempts = data.attempts.sort((a,b) => b.submittedAt.localeCompare(a.submittedAt));
+    lsSet('tutorKey', TUTOR.key);
+  } catch(e){
+    TUTOR.attempts = null;
+    TUTOR.error = e.message && !/fetch|JSON|Unexpected/i.test(e.message) ? e.message : 'Could not reach the Google Sheet. Check your connection and the web-app URL.';
+  }
+  TUTOR.loading = false; render();
+}
+function tutorLogout(){ lsDel('tutorKey'); TUTOR.key = ''; TUTOR.attempts = null; render(); }
+function tutorOpen(id){ TUTOR.attempt = TUTOR.attempts.find(a => a.id === id); UI.filter = 'all'; render(); window.scrollTo(0,0); }
+
+function renderTutor(){
+  const app = document.getElementById('app');
+  if (TUTOR.attempts == null){
+    app.innerHTML = `
+      <div class="page" style="max-width:480px; padding-top:4rem;">
+        <div class="eyebrow">Tutor view</div>
+        <h1 style="font-size:1.5rem; margin-bottom:0.6rem;">${esc(CONFIG.student)}'s results</h1>
+        <p class="muted" style="margin-bottom:1rem;">Enter the tutor key you set in the Apps Script.</p>
+        <form class="field" onsubmit="event.preventDefault(); TUTOR.key=this.k.value.trim(); tutorLoad();">
+          <input name="k" type="password" placeholder="Tutor key" value="${esc(TUTOR.key)}" style="flex:1" autocomplete="current-password">
+          <button class="btn btn-primary" ${TUTOR.loading?'disabled':''}>${TUTOR.loading?'Loading…':'Open'}</button>
+        </form>
+        ${TUTOR.error ? `<div class="err">${esc(TUTOR.error)}</div>` : ''}
+      </div>`;
+    return;
+  }
+  if (TUTOR.attempt){
+    const a = TUTOR.attempt;
+    app.innerHTML = `
+      <div class="page">
+        <button class="back-link" onclick="TUTOR.attempt=null; render();">← All attempts</button>
+        <div class="page-hd"><div><div class="eyebrow">${esc(a.student)} · ${fmtDate(a.submittedAt)}</div><h1>${esc(a.setTitle)}</h1>
+        <p>Started ${fmtDate(a.startedAt)}</p></div></div>
+        ${renderAttempt(a, {tutor:true})}
+      </div>`;
+    return;
+  }
+  const all = TUTOR.attempts;
+  const setIds = [...new Set(all.map(a => a.setId))];
+  const rows = all.filter(a => TUTOR.setFilter === 'all' || a.setId === TUTOR.setFilter);
+  const avgPct = rows.length ? Math.round(100 * rows.reduce((s,a)=>s + (a.total ? a.score/a.total : 0), 0) / rows.length) : 0;
+  const avgPerQ = rows.length ? Math.round(rows.reduce((s,a)=>s + a.totalSeconds/Math.max(1,a.items.length), 0) / rows.length) : 0;
+  app.innerHTML = `
+    <div class="page">
+      <div class="page-hd">
+        <div><div class="eyebrow">Tutor view</div><h1>${esc(CONFIG.student)}'s results</h1>
+        <p>${all.length} submitted attempt${all.length===1?'':'s'}</p></div>
+        <div class="field">
+          <select onchange="TUTOR.setFilter=this.value; render();">
+            <option value="all">All sets</option>
+            ${setIds.map(id => `<option value="${esc(id)}" ${TUTOR.setFilter===id?'selected':''}>${esc((all.find(a=>a.setId===id)||{}).setTitle||id)}</option>`).join('')}
+          </select>
+          ${ERRORLOG_HTML ? `<button class="btn btn-primary btn-sm" onclick="openErrorLog('tutor')">Error log</button>` : ''}
+          <button class="btn btn-outline btn-sm" onclick="tutorLoad()">Refresh</button>
+          <button class="btn btn-outline btn-sm" onclick="tutorLogout()">Lock</button>
+        </div>
+      </div>
+      ${rows.length ? `
+      <div class="insights">
+        <div class="ins"><div class="v">${avgPct}%</div><div class="k">Average score</div></div>
+        <div class="ins"><div class="v">${fmtSec(avgPerQ)}</div><div class="k">Average time per question (SAT pace ${CONFIG.paceSec}s)</div></div>
+      </div>
+      <div class="tbl-wrap"><table class="tbl">
+        <tr><th>Submitted</th><th>Set</th><th>Score</th><th>Total time</th><th>Avg / Q</th><th>Off-tab</th></tr>
+        ${rows.map(a => `<tr class="click" onclick="tutorOpen('${a.id}')">
+          <td>${fmtDate(a.submittedAt)}</td><td>${esc(a.setTitle)}${a.timedOut?' <span class="badge unscored">timed out</span>':''}</td>
+          <td><b>${a.score}/${a.total}</b> <span class="muted">${a.total?Math.round(100*a.score/a.total):0}%</span></td>
+          <td>${fmtTime(a.totalSeconds)}</td><td>${fmtSec(a.totalSeconds/Math.max(1,a.items.length))}</td><td>${a.awaySeconds ? fmtTime(a.awaySeconds) : '—'}</td></tr>`).join('')}
+      </table></div>` : `<p class="muted">No results yet. They'll show up here as soon as ${esc(CONFIG.student)} submits a set.</p>`}
+    </div>`;
+}
+
+/* ══════════════════ ERROR LOG (iframe over the site; #errorlog opens it directly) ══════════════════
+   srcdoc iframes share this page's origin, so the bridge inside can use the same
+   localStorage namespace and POST to the same Apps Script. */
+function openErrorLog(mode){
+  if (!ERRORLOG_HTML) return;
+  closeErrorLog(true);
+  const cfg = { mode, student: CONFIG.student, submitUrl: CONFIG.submitUrl, ns: NS, key: mode === 'tutor' ? TUTOR.key : '' };
+  const html = ERRORLOG_HTML.replace(/<head>/i, '<head><script>window.ELOG = ' + JSON.stringify(cfg).replace(/</g,'\\u003c') + ';<\/script>');
+  const layer = document.createElement('div');
+  layer.id = 'elogLayer';
+  layer.style.cssText = 'position:fixed; inset:0; z-index:500; background:#fff; display:flex; flex-direction:column;';
+  layer.innerHTML = `<div style="display:flex; align-items:center; gap:12px; padding:8px 16px; border-bottom:1px solid #ddd; font:600 14px system-ui,sans-serif;">
+      <button class="btn btn-outline btn-sm" onclick="closeErrorLog()">← Back</button>
+      <span>${mode === 'tutor' ? 'Tutor view · ' : ''}${esc(CONFIG.student)}'s error log</span></div>
+    <iframe title="Error log" style="flex:1; width:100%; border:0;"></iframe>`;
+  document.body.appendChild(layer);
+  layer.querySelector('iframe').srcdoc = html;
+  if (mode === 'student' && location.hash !== '#errorlog') history_replace('#errorlog');
+}
+function closeErrorLog(silent){
+  const l = document.getElementById('elogLayer');
+  if (l){ try { l.querySelector('iframe').contentWindow.dispatchEvent(new Event('pagehide')); } catch(e){} l.remove(); }
+  if (!silent && location.hash === '#errorlog'){ history_replace(''); }
+}
+
+/* ══════════════════ MASTER RENDER ══════════════════ */
+function render(){
+  removeSelToolbar();
+  if (location.hash === '#tutor'){ renderTutor(); renderNotesPanel(); return; }
+  if ((UI.view === 'test' || UI.view === 'review') && (!S || !curSet())) UI.view = 'home';
+  if (UI.view === 'test') renderTest();
+  else if (UI.view === 'review') renderReview();
+  else if (UI.view === 'result') renderResult();
+  else renderHome();
+  if (UI.view !== 'test' && UI.view !== 'review') renderNotesPanel();
+  save();
+}
+
+function esc(str){
+  return String(str==null?'':str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+/* Passage text sometimes carries literal <u>...</u> markers (extracted from
+   source questions that ask about "the underlined sentence"). esc() would
+   otherwise render those as visible tag text instead of an underline, so
+   this variant escapes everything else but restores real <u>/</u> tags. */
+function escKeepUnderline(str){
+  return esc(str).replace(/&lt;u&gt;/g, '<u>').replace(/&lt;\/u&gt;/g, '</u>');
+}
+
+/* ══════════════════ BOOT ══════════════════ */
+if ((UI.view === 'test' || UI.view === 'review') && UI.setId && getSet(UI.setId)){
+  S = lsGet('prog::' + UI.setId, null);
+  if (S) startTimer();
+}
+function resetDevice(){
+  try {
+    Object.keys(localStorage).filter(k => k.startsWith(NS + '::') && k !== NS + '::tutorKey').forEach(k => localStorage.removeItem(k));
+  } catch(e){}
+  location.replace(location.pathname + location.search);
+}
+function askReset(){
+  showModal('Clear practice data on this device?',
+    'This removes all answers, in-progress sets and results saved in <b>this browser</b>. Nothing is deleted from the Google Sheet or from any other device.'
+      + (syncConfigured() && outbox().length ? ` <b style="color:var(--red)">${outbox().length} result${outbox().length>1?'s have':' has'} not reached your tutor yet and will be lost.</b>` : ''),
+    [{label:'Cancel', onClick: () => { history_replace(''); render(); }}, {label:'Clear', primary:true, onClick: resetDevice}]);
+}
+window.addEventListener('hashchange', () => {
+  if (location.hash === '#reset') return askReset(); if (location.hash === '#tutor' && TUTOR.key && TUTOR.attempts == null) tutorLoad(); render(); });
+initDividerOnce();
+render();
+if (location.hash === '#tutor' && TUTOR.key) tutorLoad();
+if (location.hash === '#reset') askReset();
+if (location.hash === '#errorlog') openErrorLog('student');
+flushOutbox();
+</script>
+</body>
+</html>
